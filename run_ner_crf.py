@@ -286,10 +286,10 @@ def predict(args, model, tokenizer, prefix=""):
         results.append(json_d)
         pbar(step)
     logger.info("\n")
-    with open(output_predict_file, "w") as writer:
+    with open(output_predict_file, "w", encoding="utf8") as writer:
         for record in results:
-            writer.write(json.dumps(record) + '\n')
-    if args.task_name == 'cluener':
+            writer.write(json.dumps(record,ensure_ascii=False) + '\n')
+    if args.task_name in ['cluener',"yiliang"]:
         output_submit_file = os.path.join(pred_output_dir, prefix, "test_submit.json")
         test_text = []
         with open(os.path.join(args.data_dir,"test.json"), 'r') as fr:
@@ -378,7 +378,7 @@ def main():
     args.output_dir = args.output_dir + '{}'.format(args.model_type)
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
-    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
+    time_ = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     init_logger(log_file=args.output_dir + f'/{args.model_type}-{args.task_name}-{time_}.log')
     if os.path.exists(args.output_dir) and os.listdir(
             args.output_dir) and args.do_train and not args.overwrite_output_dir:

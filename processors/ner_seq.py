@@ -142,6 +142,8 @@ def convert_examples_to_features(examples,label_list,max_seq_length,tokenizer,
         assert len(input_ids) == max_seq_length
         assert len(input_mask) == max_seq_length
         assert len(segment_ids) == max_seq_length
+        if len(label_ids) != max_seq_length:  ## 截断一下
+            label_ids = label_ids[:max_seq_length]
         assert len(label_ids) == max_seq_length
         if ex_index < 5:
             logger.info("*** Example ***")
@@ -234,7 +236,88 @@ class CluenerProcessor(DataProcessor):
             examples.append(InputExample(guid=guid, text_a=text_a, labels=labels))
         return examples
 
+class SalerProcessor(DataProcessor):
+    """Processor for the Saler ner data set."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "train.json")), "train")
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "dev.json")), "dev")
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "test.json")), "test")
+
+    def get_labels(self):
+        """See base class."""
+        return ["X", "B-客户关注点-上课形式", "B-提出的询问内容", "B-客户异议-担心孩子跟不上", "B-销售接下来的行动", 'B-客户确认日期与时间', 'B-客户关注点-学习周期', 'B-销售提及添加微信',
+                "I-客户关注点-上课形式", "I-提出的询问内容", "I-客户异议-担心孩子跟不上", "I-销售接下来的行动", 'I-客户确认日期与时间', 'I-客户关注点-学习周期', 'I-销售提及添加微信',
+                "S-客户关注点-上课形式", "S-提出的询问内容", "S-客户异议-担心孩子跟不上", "S-销售接下来的行动", 'S-客户确认日期与时间', 'S-客户关注点-学习周期', 'S-销售提及添加微信',
+                'O',"[START]", "[END]"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            guid = "%s-%s" % (set_type, i)
+            text_a= line['words']
+            # BIOS
+            labels = line['labels']
+            examples.append(InputExample(guid=guid, text_a=text_a, labels=labels))
+        return examples
+
+class YiLiangProcessor(DataProcessor):
+    """Processor for the Saler ner data set."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "train.json")), "train")
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "dev.json")), "dev")
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "test.json")), "test")
+
+    def get_labels(self):
+        """See base class."""
+        return ["X", 
+                "B-关注点_教材-少儿教育", "I-关注点_教材-少儿教育", "S-关注点_教材-少儿教育",
+                "B-下一步行动", "I-下一步行动", "S-下一步行动",
+                "B-关注点_上课形式-少儿教育", "I-关注点_上课形式-少儿教育", "S-关注点_上课形式-少儿教育",
+                "B-客户问题", "I-客户问题", "S-客户问题",
+                "B-异议_考虑一下", "I-异议_考虑一下", "S-异议_考虑一下",
+                "B-关注点_师资-少儿教育", "I-关注点_师资-少儿教育", "S-关注点_师资-少儿教育",
+                "B-同意加微信", "I-同意加微信", "S-同意加微信",
+                "B-关注点_课程数量-少儿教育", "I-关注点_课程数量-少儿教育", "S-关注点_课程数量-少儿教育",
+                "B-客户确认日期与时间", "I-客户确认日期与时间", "S-客户确认日期与时间",
+                "B-51talk_理念渗透", "I-51talk_理念渗透", "S-51talk_理念渗透",
+                "B-异议_下次再说", "I-异议_下次再说", "S-异议_下次再说",
+                "B-关注点_上课内容-少儿教育", "I-关注点_上课内容-少儿教育", "S-关注点_上课内容-少儿教育",
+                "B-销售提及加微信", "I-销售提及加微信", "S-销售提及加微信",
+                "B-关注点_价格", "I-关注点_价格", "S-关注点_价格",
+                "O", "[START]", "[END]"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            guid = "%s-%s" % (set_type, i)
+            text_a= line['words']
+            # BIOS
+            labels = line['labels']
+            examples.append(InputExample(guid=guid, text_a=text_a, labels=labels))
+        return examples
+
+
 ner_processors = {
     "cner": CnerProcessor,
-    'cluener':CluenerProcessor
+    'cluener':CluenerProcessor,
+    'saler' :SalerProcessor,
+    "yiliang" :YiLiangProcessor
 }

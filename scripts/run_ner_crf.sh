@@ -1,8 +1,8 @@
 CURRENT_DIR=`pwd`
-export BERT_BASE_DIR=$CURRENT_DIR/prev_trained_model/bert-base-chinese
+export BERT_BASE_DIR=$CURRENT_DIR/prev_trained_model/bert-base
 export DATA_DIR=$CURRENT_DIR/datasets
 export OUTPUR_DIR=$CURRENT_DIR/outputs
-TASK_NAME="cner"
+TASK_NAME="saler"
 #
 python run_ner_crf.py \
   --model_type=bert \
@@ -12,7 +12,7 @@ python run_ner_crf.py \
   --do_eval \
   --do_lower_case \
   --data_dir=$DATA_DIR/${TASK_NAME}/ \
-  --train_max_seq_length=128 \
+  --train_max_seq_length=256 \
   --eval_max_seq_length=512 \
   --per_gpu_train_batch_size=24 \
   --per_gpu_eval_batch_size=24 \
