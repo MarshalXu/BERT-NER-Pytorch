@@ -107,3 +107,4 @@ venv.bak/
 /outputs/*_output*
 /datasets/
 !/datasets/readme.md
+/wandb

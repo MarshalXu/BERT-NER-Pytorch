@@ -23,6 +23,11 @@ from processors.ner_seq import collate_fn
 from metrics.ner_metrics import SeqEntityScore
 from tools.finetuning_argparse import get_argparse
 
+import wandb
+
+wandb.init()
+
+
 MODEL_CLASSES = {
     ## bert ernie bert_wwm bert_wwwm_ext
     'bert': (BertConfig, BertCrfForNer, BertTokenizer),
@@ -120,6 +125,7 @@ def train(args, train_dataset, model, tokenizer):
     for epoch in range(int(args.num_train_epochs)):
         pbar.reset()
         pbar.epoch_start(current_epoch=epoch)
+        wandb.log({"epochs": epoch})
         for step, batch in enumerate(train_dataloader):
             # Skip past any already trained steps if resuming training
             if steps_trained_in_current_epoch > 0:
@@ -143,6 +149,9 @@ def train(args, train_dataset, model, tokenizer):
             else:
                 loss.backward()
             pbar(step, {'loss': loss.item()})
+
+            wandb.log({"loss/train_loss": loss.item()})
+
             tr_loss += loss.item()
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:
@@ -236,11 +245,18 @@ def evaluate(args, model, tokenizer, prefix=""):
     eval_info, entity_info = metric.result()
     results = {f'{key}': value for key, value in eval_info.items()}
     results['loss'] = eval_loss
+    for k,v in results.items():
+        wandb.log({f"eval/{k}":v})
+    # for k,v in entity_info.items():
+    #     wandb.log({f"eval_entities/{k}":v})
+
     logger.info("***** Eval results %s *****", prefix)
     info = "-".join([f' {key}: {value:.4f} ' for key, value in results.items()])
     logger.info(info)
     logger.info("***** Entity results %s *****", prefix)
     for key in sorted(entity_info.keys()):
+        for p, v in entity_info[key].items():
+            wandb.log({f"{key}/{p}":v})
         logger.info("******* %s results ********" % key)
         info = "-".join([f' {key}: {value:.4f} ' for key, value in entity_info[key].items()])
         logger.info(info)
@@ -289,7 +305,7 @@ def predict(args, model, tokenizer, prefix=""):
     with open(output_predict_file, "w", encoding="utf8") as writer:
         for record in results:
             writer.write(json.dumps(record,ensure_ascii=False) + '\n')
-    if args.task_name in ['cluener',"yiliang"]:
+    if args.task_name in ['cluener',"yiliang","multigual"]:
         output_submit_file = os.path.join(pred_output_dir, prefix, "test_submit.json")
         test_text = []
         with open(os.path.join(args.data_dir,"test.json"), 'r') as fr:
@@ -372,7 +388,7 @@ def load_and_cache_examples(args, task, tokenizer, data_type='train'):
 
 def main():
     args = get_argparse().parse_args()
-
+    wandb.config.update(args)
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
     args.output_dir = args.output_dir + '{}'.format(args.model_type)
@@ -468,7 +484,7 @@ def main():
             model = model_class.from_pretrained(checkpoint, config=config)
             model.to(args.device)
             result = evaluate(args, model, tokenizer, prefix=prefix)
-            if global_step:
+            if global_step: 
                 result = {"{}_{}".format(global_step, k): v for k, v in result.items()}
             results.update(result)
         output_eval_file = os.path.join(args.output_dir, "eval_results.txt")

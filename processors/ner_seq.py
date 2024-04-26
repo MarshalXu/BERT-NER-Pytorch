@@ -64,7 +64,7 @@ def collate_fn(batch):
     all_token_type_ids = all_token_type_ids[:, :max_len]
     all_labels = all_labels[:,:max_len]
     return all_input_ids, all_attention_mask, all_token_type_ids, all_labels,all_lens
-
+torch.cuda.is_available()
 def convert_examples_to_features(examples,label_list,max_seq_length,tokenizer,
                                  cls_token_at_end=False,cls_token="[CLS]",cls_token_segment_id=1,
                                  sep_token="[SEP]",pad_on_left=False,pad_token=0,pad_token_segment_id=0,
@@ -269,7 +269,7 @@ class SalerProcessor(DataProcessor):
             examples.append(InputExample(guid=guid, text_a=text_a, labels=labels))
         return examples
 
-class YiLiangProcessor(DataProcessor):
+class YiLiangProcessor_14labels(DataProcessor):
     """Processor for the Saler ner data set."""
 
     def get_train_examples(self, data_dir):
@@ -286,22 +286,126 @@ class YiLiangProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return ["X", 
-                "B-关注点_教材-少儿教育", "I-关注点_教材-少儿教育", "S-关注点_教材-少儿教育",
-                "B-下一步行动", "I-下一步行动", "S-下一步行动",
-                "B-关注点_上课形式-少儿教育", "I-关注点_上课形式-少儿教育", "S-关注点_上课形式-少儿教育",
+        return ["X",
                 "B-客户问题", "I-客户问题", "S-客户问题",
+                "B-销售提及加微信", "I-销售提及加微信", "S-销售提及加微信",
                 "B-异议_考虑一下", "I-异议_考虑一下", "S-异议_考虑一下",
-                "B-关注点_师资-少儿教育", "I-关注点_师资-少儿教育", "S-关注点_师资-少儿教育",
-                "B-同意加微信", "I-同意加微信", "S-同意加微信",
-                "B-关注点_课程数量-少儿教育", "I-关注点_课程数量-少儿教育", "S-关注点_课程数量-少儿教育",
+                "B-关注点_上课形式_少儿教育", "I-关注点_上课形式_少儿教育", "S-关注点_上课形式_少儿教育",
                 "B-客户确认日期与时间", "I-客户确认日期与时间", "S-客户确认日期与时间",
+                "B-同意加微信", "I-同意加微信", "S-同意加微信",
+                "B-关注点_上课内容_少儿教育", "I-关注点_上课内容_少儿教育", "S-关注点_上课内容_少儿教育",
                 "B-51talk_理念渗透", "I-51talk_理念渗透", "S-51talk_理念渗透",
                 "B-异议_下次再说", "I-异议_下次再说", "S-异议_下次再说",
-                "B-关注点_上课内容-少儿教育", "I-关注点_上课内容-少儿教育", "S-关注点_上课内容-少儿教育",
-                "B-销售提及加微信", "I-销售提及加微信", "S-销售提及加微信",
+                "B-关注点_课程数量_少儿教育", "I-关注点_课程数量_少儿教育", "S-关注点_课程数量_少儿教育",
                 "B-关注点_价格", "I-关注点_价格", "S-关注点_价格",
+                "B-下一步行动", "I-下一步行动", "S-下一步行动",
+                "B-关注点_师资_少儿教育", "I-关注点_师资_少儿教育", "S-关注点_师资_少儿教育",
+                "B-关注点_教材_少儿教育", "I-关注点_教材_少儿教育", "S-关注点_教材_少儿教育", 
                 "O", "[START]", "[END]"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            guid = "%s-%s" % (set_type, i)
+            text_a= line['words']
+            # BIOS
+            labels = line['labels']
+            examples.append(InputExample(guid=guid, text_a=text_a, labels=labels))
+        return examples
+
+class YiLiangProcessor_28labels(DataProcessor):
+    """Processor for the Saler ner data set."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "train.json")), "train")
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "dev.json")), "dev")
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_json(os.path.join(data_dir, "test.json")), "test")
+
+    def get_labels(self):
+        """See base class."""
+        return [
+            "X",
+            "B-关注点_价格",
+            "I-关注点_价格",
+            "S-关注点_价格",
+            "B-51talk_理念渗透",
+            "I-51talk_理念渗透",
+            "S-51talk_理念渗透",
+            "B-关注点_上课内容_少儿教育",
+            "I-关注点_上课内容_少儿教育",
+            "S-关注点_上课内容_少儿教育",
+            "B-客户问题",
+            "I-客户问题",
+            "S-客户问题",
+            "B-51talk_自报家门",
+            "I-51talk_自报家门",
+            "S-51talk_自报家门",
+            "B-异议_考虑一下",
+            "I-异议_考虑一下",
+            "S-异议_考虑一下",
+            "B-销售提及加微信",
+            "I-销售提及加微信",
+            "S-销售提及加微信",
+            "B-同意加微信",
+            "I-同意加微信",
+            "S-同意加微信",
+            "B-下一步行动",
+            "I-下一步行动",
+            "S-下一步行动",
+            "B-异议_下次再说",
+            "I-异议_下次再说",
+            "S-异议_下次再说",
+            "B-关注点_询问地址_通用",
+            "I-关注点_询问地址_通用",
+            "S-关注点_询问地址_通用",
+            "B-异议_价格异议",
+            "I-异议_价格异议",
+            "S-异议_价格异议",
+            "B-51talk_确认跟进时间",
+            "I-51talk_确认跟进时间",
+            "S-51talk_确认跟进时间",
+            "B-客户确认日期与时间",
+            "I-客户确认日期与时间",
+            "S-客户确认日期与时间",
+            "B-关注点_上课形式_少儿教育",
+            "I-关注点_上课形式_少儿教育",
+            "S-关注点_上课形式_少儿教育",
+            "B-异议_孩子跟不上_少儿教育",
+            "I-异议_孩子跟不上_少儿教育",
+            "S-异议_孩子跟不上_少儿教育",
+            "B-需求_有报班意向_25752",
+            "I-需求_有报班意向_25752",
+            "S-需求_有报班意向_25752",
+            "B-异议_孩子不愿意学_少儿教育",
+            "I-异议_孩子不愿意学_少儿教育",
+            "S-异议_孩子不愿意学_少儿教育",
+            "B-关注点_课程数量_少儿教育",
+            "I-关注点_课程数量_少儿教育",
+            "S-关注点_课程数量_少儿教育",
+            "B-51talk_家长试听效果_好",
+            "I-51talk_家长试听效果_好",
+            "S-51talk_家长试听效果_好",
+            "B-51talk_提问授权",
+            "I-51talk_提问授权",
+            "S-51talk_提问授权",
+            "B-51talk_了解客户需求",
+            "I-51talk_了解客户需求",
+            "S-51talk_了解客户需求",
+            "B-关注点_教材_少儿教育",
+            "I-关注点_教材_少儿教育",
+            "S-关注点_教材_少儿教育",
+            "O",
+            "[START]",
+            "[END]",
+        ]
 
     def _create_examples(self, lines, set_type):
         """Creates examples for the training and dev sets."""
@@ -319,5 +423,6 @@ ner_processors = {
     "cner": CnerProcessor,
     'cluener':CluenerProcessor,
     'saler' :SalerProcessor,
-    "yiliang" :YiLiangProcessor
+    "yiliang" :YiLiangProcessor_28labels,
+    "yiliang_multigual" :YiLiangProcessor_28labels
 }
